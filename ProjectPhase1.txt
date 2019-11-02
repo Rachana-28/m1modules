@@ -1,0 +1,1254 @@
+*********************Entities***************
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace JobPortalEntities
+{
+    [Serializable]
+    public class JBEntities
+    {
+        public string JobID { get; set; }
+        public string Employer { get; set; }
+        public string Address { get; set; }
+        public string ContactNumber { get; set; }
+        public string ContactEmailID { get; set; }
+        public string SkillsRequired { get; set; }
+        public string Qualification { get; set; }
+        public string Location { get; set; }
+        public long Salary { get; set; }
+        public int NoOfVacancies { get; set; }
+        
+    }
+    [Serializable]
+    public class UserEntities
+    {
+        public string UserID { get; set; }
+        public string Password { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public int Age { get; set; }
+        public string Gender { get; set; }
+        public string Address { get; set; }
+        public string PhoneNo { get; set; }
+        public string UserType { get; set; }
+        
+    }
+}
+**************Exception*********************
+?using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace JobPortalException
+{
+    public class JPException : ApplicationException
+    {
+        public JPException() : base() { }
+        public JPException(string message) : base(message) { }
+        public JPException(string message, Exception innerException) : base(message, innerException) { }
+    }
+}
+************************DAL************************
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using JobPortalEntities;
+using JobPortalException;
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
+
+namespace JobPortalDAL
+{
+    public class JPortalDAL
+    {
+        
+        public static List<UserEntities> userList = new List<UserEntities>();
+        public static string fileNameUser = "UserDetails.obj";
+
+        public static List<JBEntities> jobList = new List<JBEntities>();
+        public static string fileNameJob = "JobDetails.obj";
+        public static bool AddUserDetailsDAL(UserEntities user)
+        {
+            bool isUserAdded = false;
+            try
+            {
+                userList.Add(user);
+                Serialization();
+                isUserAdded = true;
+            }
+            catch (JPException ex)
+            {
+                throw ex;
+            }
+            return isUserAdded;
+        }
+        public static bool AddJobDetailsDAL(JBEntities job)
+        {
+            bool isJobAdded = false;
+            try
+            {
+                jobList.Add(job);
+                Serialization();
+                isJobAdded = true;
+            }
+            catch (JPException ex)
+            {
+                throw ex;
+            }
+            return isJobAdded;
+        }
+        public static List<UserEntities> ListUserDetailsDAL()
+        {
+            return userList;
+        }
+        public static List<JBEntities> ListJobDetailsDAL()
+        {
+            return jobList;
+        }
+
+        public static bool DeleteUserDetailsDAL(String UserID)
+        {
+            bool isUserDeleted = false;
+            try
+            {
+                foreach (var user in userList)
+                {
+                    if (user.UserID.Equals(UserID))
+                    {
+                        userList.Remove(user);
+                        isUserDeleted = true;
+                        Serialization();
+                        break;
+                    }
+                }
+            }
+            catch (JPException ex)
+            {
+                throw ex;
+            }
+            return isUserDeleted;
+        }
+        public static bool DeleteJobDetailsDAL(String JobID)
+        {
+            bool isJobDeleted = false;
+            try
+            {
+                foreach (var job in jobList)
+                {
+                    if (job.JobID.Equals(JobID))
+                    {
+                        jobList.Remove(job);
+                        isJobDeleted = true;
+                        Serialization();
+                        break;
+                    }
+                }
+            }
+            catch (JPException ex)
+            {
+                throw ex;
+            }
+            return isJobDeleted;
+        }
+        public static bool UpdateUserDetailDAL(UserEntities updatedUser)
+        {
+            bool isUserUpdated = false;
+            try
+            {
+                int i = 0;
+                foreach (var user in userList)
+                {
+                    if (user.UserID.Equals(updatedUser.UserID))
+                    {
+                        userList[i] = updatedUser;
+                        isUserUpdated = true;
+                        Serialization();
+                        break;
+                    }
+                    i++;
+                }
+            }
+            catch (JPException ex)
+            {
+                throw ex;
+            }
+            return isUserUpdated;
+        }
+        public static bool UpdateJobDetailDAL(JBEntities updatedJob)
+        {
+            bool isJobUpdated = false;
+            try
+            {
+                int i = 0;
+                foreach (var job in jobList)
+                {
+                    if (job.JobID.Equals(updatedJob.JobID))
+                    {
+                        jobList[i] = updatedJob;
+                        isJobUpdated = true;
+                        Serialization();
+                        break;
+                    }
+                    i++;
+                }
+            }
+            catch (JPException ex)
+            {
+                throw ex;
+            }
+            return isJobUpdated;
+        }
+        public static UserEntities SearchUserDAL(string uID)
+        {
+            UserEntities userSearch = null;
+            try
+            {
+                foreach (var user in userList)
+                {
+                    if (user.UserID.Equals(uID))
+                    {
+                        userSearch = user;
+                    }
+                }
+            }
+            catch (JPException ex)
+            {
+                throw ex;
+            }
+            return userSearch;
+        }
+        public static JBEntities SearchJobDAL(string jID)
+        {
+            JBEntities jobSearch = null;
+            try
+            {
+                foreach (var job in jobList)
+                {
+                    if (job.JobID.Equals(jID))
+                    {
+                        jobSearch = job;
+                    }
+                }
+            }
+            catch (JPException ex)
+            {
+                throw ex;
+            }
+            return jobSearch;
+        }
+        public static void Serialization()
+        {
+            try
+            {
+                using (Stream file = File.Open(fileNameUser, FileMode.Create))
+                {
+                    BinaryFormatter formatter = new BinaryFormatter();
+                    formatter.Serialize(file, userList);
+                    file.Close();
+                }
+                using (Stream file = File.Open(fileNameJob, FileMode.Create))
+                {
+                    BinaryFormatter formatter = new BinaryFormatter();
+                    formatter.Serialize(file, jobList);
+                    file.Close();
+                }
+            }
+            catch (JPException ex)
+            {
+                throw ex;
+            }
+        }
+        public static void SetListDAL()
+        {
+            try
+            {
+                using (Stream file = File.Open(fileNameUser, FileMode.Open))
+                {
+                    BinaryFormatter formatter = new BinaryFormatter();
+                    userList = (List<UserEntities>)formatter.Deserialize(file);
+                    file.Close();
+                }
+                using (Stream file = File.Open(fileNameJob, FileMode.Open))
+                {
+                    BinaryFormatter formatter = new BinaryFormatter();
+                    jobList = (List<JBEntities>)formatter.Deserialize(file);
+                    file.Close();
+                }
+            }
+            catch (JPException ex)
+            {
+                throw ex;
+            }
+        }
+    }
+}
+*****************************BAL*****************************************
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.IO;
+using JobPortalEntities;
+using JobPortalException;
+using JobPortalDAL;
+using System.Text.RegularExpressions;
+
+namespace JobPortalBLL
+{
+    public class JPortalBLL
+    {
+        public static bool ValidateUser(UserEntities user)
+        {
+            bool validateUser = true;
+            try
+            {
+                if (!Regex.IsMatch(user.UserID, @"[0-9]{5}"))
+                {
+                    validateUser = false;
+                    throw new JPException("Id should be of length 5");
+                }
+                //if (!Regex.IsMatch(user.Password, @"^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])(?=.{8,})"))
+                //{
+                //    validateUser = false;
+                //    throw new JPException("Password must contain one upper case alphabet one lower case alphabet one special character and one numeric value atleast with minimum length of 8");
+                //}
+                if (user.Age<18)
+                {
+                    validateUser = false;
+                    throw new JPException("Age must be greater than 18");
+
+                }
+                if (user.Gender != "M" && user.Gender != "F")
+                {
+                    validateUser = false;
+                    throw new JPException("Gender should be M or F");
+                }
+                if (user.UserType != "A" && user.UserType != "U")
+                {
+                    validateUser = false;
+                    throw new JPException("UserType should be A or U");
+                }
+                if (user.UserID == String.Empty || user.Password == String.Empty || user.FirstName == String.Empty || user.LastName == String.Empty || user.Age.ToString() == String.Empty || user.Gender == String.Empty || user.Address == String.Empty || user.PhoneNo == String.Empty || user.UserType == String.Empty)
+                {
+                    validateUser = false;
+                    throw new JPException("ALL FIELDS ARE MANDATORY");
+                }
+
+            }
+            catch (JPException ex)
+            {
+                throw ex;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            return validateUser;
+        }
+
+        public static bool ValidateJob(JBEntities job)
+        {
+            bool validateJob = true;
+            try
+            {
+                if (!Regex.IsMatch(job.JobID, @"[0-9]{5}"))
+                {
+                    validateJob = false;
+                    throw new JPException("Id should be of length 5");
+                }
+                if (!Regex.IsMatch(job.ContactNumber, @"[6-9][0-9]{9}"))
+                {
+                    validateJob = false;
+                    throw new JPException("Contact number must be of ten digits");
+                }
+                //if (!Regex.IsMatch(job.ContactEmailID, @"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"))
+                //{
+                //    validateJob = false;
+                //    throw new JPException("Input must be of Email type");
+                //}
+                if (job.Salary<0)
+                {
+                    validateJob = false;
+                    throw new JPException("Salary must be positive");
+
+                }
+                if (job.JobID == String.Empty || job.Employer == String.Empty || job.Address == String.Empty || job.ContactNumber == String.Empty || job.ContactEmailID == String.Empty || job.SkillsRequired == String.Empty || job.Qualification == String.Empty || job.Location == String.Empty || job.Salary.ToString() == String.Empty || job.NoOfVacancies.ToString()== String.Empty)
+                {
+                    validateJob = false;
+                    throw new JPException("ALL FIELDS ARE MANDATORY");
+                }
+
+            }
+            catch (JPException ex)
+            {
+                throw ex;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            return validateJob;
+        }
+
+        public static bool AddUserDetailsBLL(UserEntities user)
+        {
+            bool isUserAdded = false;
+            try
+            {
+                if (ValidateUser(user))
+                {
+                    isUserAdded = JPortalDAL.AddUserDetailsDAL(user);
+                }
+            }
+            catch (JPException ex)
+            {
+                throw ex;
+            }
+            return isUserAdded;
+        }
+
+        public static bool AddJobDetailsBLL(JBEntities job)
+        {
+            bool isJobAdded = false;
+            try
+            {
+                if (ValidateJob(job))
+                {
+                    isJobAdded = JPortalDAL.AddJobDetailsDAL(job);
+                }                
+            }
+            catch (JPException ex)
+            {
+                throw ex;
+            }
+            return isJobAdded;
+        }
+        public static List<UserEntities> ListUserDetailsBLL()
+        {
+            return JPortalDAL.ListUserDetailsDAL();
+        }
+
+        public static List<JBEntities> ListJobDetailsBLL()
+        {
+            return JPortalDAL.ListJobDetailsDAL();
+        }
+        public static bool DeleteUserDetailsBLL(string uID)
+        {
+            bool isUserDeleted = false;
+            try
+            {
+                isUserDeleted = JPortalDAL.DeleteUserDetailsDAL(uID);
+            }
+            catch (JPException ex)
+            {
+                throw ex;
+            }
+            return isUserDeleted;
+        }
+        public static bool DeleteJobDetailsBLL(string jID)
+        {
+            bool isJobDeleted = false;
+            try
+            {
+                isJobDeleted = JPortalDAL.DeleteJobDetailsDAL(jID);
+            }
+            catch (JPException ex)
+            {
+                throw ex;
+            }
+            return isJobDeleted;
+        }
+        public static bool UpdateUserDetailsBLL(UserEntities updatedUser)
+        {
+            bool isUserUpdated = false;
+            try
+            {
+                isUserUpdated = JPortalDAL.UpdateUserDetailDAL(updatedUser);
+            }
+            catch (JPException ex)
+            {
+                throw ex;
+            }
+            return isUserUpdated;
+        }
+        public static bool UpdateJobDetailsBLL(JBEntities updatedJob)
+        {
+            bool isJobUpdated = false;
+            try
+            {
+                isJobUpdated = JPortalDAL.UpdateJobDetailDAL(updatedJob);
+            }
+            catch (JPException ex)
+            {
+                throw ex;
+            }
+            return isJobUpdated;
+        }
+        public static UserEntities SearchUserBLL(string uID)
+        {
+            UserEntities user = null;
+            try
+            {
+                user = JPortalDAL.SearchUserDAL(uID);
+            }
+            catch (JPException ex)
+            {
+                throw ex;
+            }
+            return user;
+        }
+        public static JBEntities SearchJobBLL(string jID)
+        {
+            JBEntities job = null;
+            try
+            {
+                job = JPortalDAL.SearchJobDAL(jID);
+            }
+            catch (JPException ex)
+            {
+                throw ex;
+            }
+            return job;
+        }
+        public static void SerializeFile()
+        {
+            try
+            {
+                if (JPortalDAL.userList != null)
+                {
+                    JPortalDAL.Serialization();
+                }
+                if (JPortalDAL.jobList != null)
+                {
+                    JPortalDAL.Serialization();
+                }
+            }
+            catch (JPException ex)
+            {
+                throw ex;
+            }
+        }
+        public static void SetListBLL()
+        {
+            try
+            {
+                if (File.Exists(Directory.GetCurrentDirectory() + "\\" + JPortalDAL.fileNameUser))
+                {
+                    JPortalDAL.SetListDAL();
+                }
+                if (File.Exists(Directory.GetCurrentDirectory() + "\\" + JPortalDAL.fileNameJob))
+                {
+                    JPortalDAL.SetListDAL();
+                }
+            }
+            catch (JPException ex)
+            {
+                throw ex;
+            }
+        }
+
+    }
+}
+**************************************PL********************************************
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using JobPortalEntities;
+using JobPortalException;
+using JobPortalBLL;
+
+namespace JobPortalPL
+{
+    class JPortalPL
+    {
+        static void Main(string[] args)
+        {
+            Deserialization();
+            try
+            {
+                int ch = 1;
+                do
+                {
+                    PrintLogin();
+                    Console.Write("Enter your choice:");
+                    int choice = Int32.Parse(Console.ReadLine());
+                    switch (choice)
+                    {
+                        case 1:
+                            char checkUserType = checkAccess();
+                            if (checkUserType == 'A')
+                            {                                
+                                Console.Clear();
+                                Console.WriteLine("-----------------------------------------------------------------------------------");
+                                Console.WriteLine("Admin Login successful!");
+                                Console.WriteLine("-----------------------------------------------------------------------------------");
+                                bool goWithAdmin = true;
+                                while (goWithAdmin)
+                                {
+                                    PrintForAdmin();
+                                    Console.Write("Enter your choice:");
+                                    int userChoice = Int32.Parse(Console.ReadLine());
+                                    switch (userChoice)
+                                    {
+                                        case 1:
+                                            Console.WriteLine("1. Add Job");
+                                            AddJobDetailsPL();
+                                            break;
+                                        case 2:
+                                            Console.WriteLine("2. Edit Job");
+                                            UpdateJobDetailsPL();
+                                            break;
+                                        case 3:
+                                            Console.WriteLine("3. Delete Job");
+                                            DeleteJobDetailsPL();
+                                            break;
+                                        case 4:
+                                            Console.WriteLine("4. Search Job");
+                                            SearchJobDetailsPL();
+                                            break;
+                                        case 5:
+                                            Console.WriteLine("5. View Jobs");
+                                            DisplayAllJobPL();
+                                            break;
+                                        case 6:
+                                            Console.WriteLine("6. Manage Users");
+                                            bool chUserWhile = true;
+                                            while (chUserWhile)
+                                            {
+                                                PrintForManageUser();
+                                                Console.Write("Enter your choice:");
+                                                int chUser = Int32.Parse(Console.ReadLine());
+                                                switch (chUser)
+                                                {
+                                                    case 1:
+                                                        Console.WriteLine("1. Add User:case1");
+                                                        AddUserDetailsByAdminPL();
+                                                        break;
+                                                    case 2:
+                                                        Console.WriteLine("2. Edit User:case2");
+                                                        UpdateUserDetailsPL();
+                                                        break;
+                                                    case 3:
+                                                        Console.WriteLine("3. Delete User:case3");
+                                                        DeleteUserDetailsPL();
+                                                        break;
+                                                    case 4:
+                                                        Console.WriteLine("4. Search User:case4");
+                                                        SearchUserDetailsPL();
+                                                        break;
+                                                    case 5:
+                                                        Console.WriteLine("5. View User:case5");
+                                                        DisplayAllUserPL();
+                                                        break;
+                                                    case 6:
+                                                        Console.WriteLine("6. Exit:case6");
+                                                        chUserWhile = false;
+                                                        break;
+                                                    default:
+                                                        Console.WriteLine("Invalid choice");
+                                                        break;
+                                                }
+                                            }
+                                            break;
+                                        case 7:
+                                            goWithAdmin = false;
+                                            break;
+                                        default:
+                                            Console.WriteLine("Enter correct choice");
+                                            break;
+                                    }
+                                }
+                                Console.Clear();
+                                Console.WriteLine("Logout Successful!");
+                            }
+                            else
+                            {
+                                if (checkUserType == 'U')
+                                {
+                                    Console.Clear();
+                                    Console.WriteLine("-----------------------------------------------------------------------------------");
+                                    Console.WriteLine("User Login successful!");
+                                    Console.WriteLine("-----------------------------------------------------------------------------------");
+                                    bool goWithUser = true;
+                                    while (goWithUser)
+                                    {
+                                        PrintForUser();
+                                        Console.Write("Enter your choice:");
+                                        int userChoice = Int32.Parse(Console.ReadLine());
+                                        switch (userChoice)
+                                        {
+                                            case 1:
+                                                Console.WriteLine("SearchForJob");
+                                                SearchJobDetailsPL();
+                                                break;
+                                            case 2:
+                                                Console.WriteLine("ViewJobs");
+                                                DisplayAllJobPL();
+                                                break;
+                                            case 3:
+                                                goWithUser = false;
+                                                break;
+                                            default:
+                                                Console.WriteLine("Enter correct choice");
+                                                break;
+                                        }
+                                    }
+                                    Console.Clear();
+                                    Console.WriteLine("Logout Successful!");
+                                }
+                                else
+                                {
+                                    Console.WriteLine("Invalid UserId or Password!");
+                                }
+                            }
+                            break;
+                        case 2:
+                            AddUserDetailsPL();
+                            break;
+                        case 3:
+                            ch = -1;
+                            break;
+                        default:
+                            Console.WriteLine("Enter correct choice");
+                            Serialization();
+                            break;
+                    }
+                } while (ch!=-1);
+                Console.WriteLine("Thanks for visiting!");                
+            }
+            catch (JPException ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+        public static void AddUserDetailsPL()
+        {
+            UserEntities user = new UserEntities();
+            try
+            {
+                Console.Clear();
+                Console.WriteLine("************************************************************************************");
+                Console.WriteLine("                                 Add User Details                           ");
+                Console.WriteLine("************************************************************************************");
+                Console.Write("Enter the UserId(00001-99999):");
+                user.UserID = Console.ReadLine();
+                Console.Write("Enter the Password:");
+                user.Password = Console.ReadLine();
+                Console.Write("Enter the First Name:");
+                user.FirstName = Console.ReadLine();
+                Console.Write("Enter the Last Name:");
+                user.LastName = Console.ReadLine();
+                Console.Write("Enter the Age:");
+                user.Age = Int32.Parse(Console.ReadLine());
+                Console.Write("Enter the Gender(M/F):");
+                user.Gender = Console.ReadLine();
+                Console.Write("Enter the Address:");
+                user.Address = Console.ReadLine();
+                Console.Write("Enter the PhoneNo:");
+                user.PhoneNo = Console.ReadLine();
+                //Console.WriteLine("Enter the usertype");
+                //user.UserType = Console.ReadLine();
+                user.UserType = "U";
+                Console.Clear();
+                Console.WriteLine("-----------------------------------------------------------------------------------");
+                bool userAdded = JPortalBLL.AddUserDetailsBLL(user);
+                if (userAdded)
+                    Console.WriteLine("User Details are added successfully"); 
+                else
+                    Console.WriteLine("Details are not added ");
+                Console.WriteLine("-----------------------------------------------------------------------------------");
+            }
+            catch (JPException ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+        public static void AddUserDetailsByAdminPL()
+        {
+            UserEntities user = new UserEntities();
+            try
+            {
+                Console.Clear();
+                Console.WriteLine("************************************************************************************");
+                Console.WriteLine("                                 Add User Details                           ");
+                Console.WriteLine("************************************************************************************");
+                Console.Write("Enter the UserId(00001-99999):");
+                user.UserID = Console.ReadLine();
+                Console.Write("Enter the Password:");
+                user.Password = Console.ReadLine();
+                Console.Write("Enter the First Name:");
+                user.FirstName = Console.ReadLine();
+                Console.Write("Enter the Last Name:");
+                user.LastName = Console.ReadLine();
+                Console.Write("Enter the Age:");
+                user.Age = Int32.Parse(Console.ReadLine());
+                Console.Write("Enter the Gender:");
+                user.Gender = Console.ReadLine();
+                Console.Write("Enter the Address:");
+                user.Address = Console.ReadLine();
+                Console.Write("Enter the PhoneNo:");
+                user.PhoneNo = Console.ReadLine();
+                Console.Write("Enter the UserType:");
+                user.UserType = Console.ReadLine();
+                Console.Clear();
+                Console.WriteLine("-----------------------------------------------------------------------------------");
+                bool userAdded = JPortalBLL.AddUserDetailsBLL(user);
+                if (userAdded)
+                    Console.WriteLine("User Details are added successfully");
+                else
+                    Console.WriteLine("Details are not added ");
+                Console.WriteLine("-----------------------------------------------------------------------------------");
+            }
+            catch (JPException ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+        public static void AddJobDetailsPL()
+        {
+            JBEntities job = new JBEntities();
+            try
+            {
+                Console.Clear();
+                Console.WriteLine("************************************************************************************");
+                Console.WriteLine("                                 Add Job Details                           ");
+                Console.WriteLine("************************************************************************************");
+                Console.Write("Enter the JobId(00001-99999):");
+                job.JobID = Console.ReadLine();
+                Console.Write("Enter the Employer:");
+                job.Employer = Console.ReadLine();
+                Console.Write("Enter the Address:");
+                job.Address = Console.ReadLine();
+                Console.Write("Enter the Contact Number:");
+                job.ContactNumber = Console.ReadLine();
+                Console.Write("Enter the ContactEmailID:");
+                job.ContactEmailID = Console.ReadLine();
+                Console.Write("Enter the SkillsRequired:");
+                job.SkillsRequired = Console.ReadLine();
+                Console.Write("Enter the Qualification:");
+                job.Qualification = Console.ReadLine();
+                Console.Write("Enter the Location:");
+                job.Location = Console.ReadLine();
+                Console.Write("Enter the Salary:");
+                job.Salary = long.Parse(Console.ReadLine());
+                Console.Write("Enter the NoOfVacancies:");
+                job.NoOfVacancies = Int32.Parse(Console.ReadLine()); 
+                Console.Clear();
+                Console.WriteLine("-----------------------------------------------------------------------------------");
+                bool jobAdded = JPortalBLL.AddJobDetailsBLL(job);
+                if (jobAdded)
+                    Console.WriteLine("job Details are added successfully");
+                else
+                    Console.WriteLine("Details are not added ");
+                Console.WriteLine("-----------------------------------------------------------------------------------");
+
+            }
+            catch (JPException ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+        public static char checkAccess()
+        {
+            UserEntities user = new UserEntities();
+            char userType = 'n';
+            try
+            {
+                Console.Clear();
+                Console.WriteLine("************************************************************************************");
+                Console.WriteLine("                                 Job Portal System : Login                           ");
+                Console.WriteLine("************************************************************************************");
+                Console.Write("Enter the UserID:");
+                string uID = Console.ReadLine();
+                Console.Write("Enter the Password:");
+                string password = Console.ReadLine();
+                user = JPortalBLL.SearchUserBLL(uID);
+                if (user.UserID == uID && user.Password == password)
+                {
+                    userType = char.Parse(user.UserType);
+                }
+            }
+            catch (JPException ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            return userType;
+        }
+        static void DeleteJobDetailsPL()
+        {
+            try
+            {
+                Console.WriteLine("Enter jobID");
+                string jobID = Console.ReadLine();
+                bool isJobDeleted = JPortalBLL.DeleteJobDetailsBLL(jobID);
+                if (isJobDeleted)
+                {
+                    Console.WriteLine("Job details deleted");
+                }
+                else
+                    Console.WriteLine("Job details not deleted");
+            }
+            catch (JPException ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+        static void DeleteUserDetailsPL()
+        {
+            try
+            {
+                Console.WriteLine("Enter UserID");
+                string userID = Console.ReadLine();
+                bool isUserDeleted = JPortalBLL.DeleteUserDetailsBLL(userID);
+                if (isUserDeleted)
+                {
+                    Console.WriteLine("User details deleted");
+                }
+                else
+                    Console.WriteLine("User details not deleted");
+            }
+            catch (JPException ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+        public static void UpdateJobDetailsPL()
+        {
+            string jID;
+            try
+            {
+                Console.Clear();
+                Console.WriteLine("************************************************************************************");
+                Console.WriteLine("                                 Update Job Details                           ");
+                Console.WriteLine("************************************************************************************");
+                Console.WriteLine("Enter the Job Id:(00001-99999)");
+                jID = Console.ReadLine();
+                JBEntities job = JPortalBLL.SearchJobBLL(jID);
+                if (job != null)
+                {
+                    job.JobID = jID;
+                    Console.Write("Enter the Employer:");
+                    job.Employer = Console.ReadLine();
+                    Console.Write("Enter the Address:");
+                    job.Address = Console.ReadLine();
+                    Console.Write("Enter the Contact Number:");
+                    job.ContactNumber = Console.ReadLine();
+                    Console.Write("Enter the ContactEmailID:");
+                    job.ContactEmailID = Console.ReadLine();
+                    Console.Write("Enter the SkillsRequired:");
+                    job.SkillsRequired = Console.ReadLine();
+                    Console.Write("Enter the Qualification:");
+                    job.Qualification = Console.ReadLine();
+                    Console.Write("Enter the Location:");
+                    job.Location = Console.ReadLine();
+                    Console.Write("Enter the Salary:");
+                    job.Salary = long.Parse(Console.ReadLine());
+                    Console.Write("Enter the NoOfVacancies:");
+                    job.NoOfVacancies = Int32.Parse(Console.ReadLine());
+                    bool jobUpdated = JPortalBLL.UpdateJobDetailsBLL(job);
+                    if (jobUpdated)
+                        Console.WriteLine("Job Details are updated");
+                    else
+                        Console.WriteLine("Job Details are not updated");
+                }
+                else
+                    Console.WriteLine("ID not found");
+            }
+            catch (JPException ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+        public static void UpdateUserDetailsPL()
+        {
+            string uID;
+            try
+            {
+                Console.Clear();
+                Console.WriteLine("************************************************************************************");
+                Console.WriteLine("                                 Update Job Details                           ");
+                Console.WriteLine("************************************************************************************");
+                Console.WriteLine("Enter the Job Id:(00001-99999)");
+                uID = Console.ReadLine();
+                UserEntities user = JPortalBLL.SearchUserBLL(uID);
+                if (user != null)
+                {
+                    user.UserID = uID;
+                    Console.Write("Enter the Password:");
+                    user.Password = Console.ReadLine();
+                    Console.Write("Enter the First Name:");
+                    user.FirstName = Console.ReadLine();
+                    Console.Write("Enter the Last Name:");
+                    user.LastName = Console.ReadLine();
+                    Console.Write("Enter the Age:");
+                    user.Age = Int32.Parse(Console.ReadLine());
+                    Console.Write("Enter the Gender:");
+                    user.Gender = Console.ReadLine();
+                    Console.Write("Enter the Address:");
+                    user.Address = Console.ReadLine();
+                    Console.Write("Enter the PhoneNo:");
+                    user.PhoneNo = Console.ReadLine();
+                    Console.Write("Enter the UserType:");
+                    user.UserType = Console.ReadLine();
+                    bool userUpdated = JPortalBLL.UpdateUserDetailsBLL(user);
+                    if (userUpdated)
+                        Console.WriteLine("User Details are updated");
+                    else
+                        Console.WriteLine("User Details are not updated");
+                }
+                else
+                    Console.WriteLine("ID not found");
+            }
+            catch (JPException ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+        public static void SearchJobDetailsPL()
+        {
+            string jID;
+            JBEntities job;
+            try
+            {
+                Console.Clear();
+                Console.WriteLine("************************************************************************************");
+                Console.WriteLine("                                 Search Job                           ");
+                Console.WriteLine("************************************************************************************");
+                Console.WriteLine("Enter the Job Id :(00001-99999)");
+                jID = Console.ReadLine();
+                job = JPortalBLL.SearchJobBLL(jID);
+                if (job != null)
+                {
+                    Console.WriteLine("Job is found");
+                    Console.WriteLine("*********************************************************************************");
+                    Console.WriteLine("{0}: {1}, {2}\n\tContact : {3} ({4})\n\tSkillsRequired : {5} \n\tQualification : {6} \n\tAt {7} with Salary {8}\n\tNoOfVacancies : {9}", job.JobID, job.Employer, job.Address, job.ContactNumber, job.ContactEmailID, job.SkillsRequired, job.Qualification, job.Location, job.Salary, job.NoOfVacancies);
+                    Console.WriteLine("*********************************************************************************");
+                }
+                else
+                    Console.WriteLine("Employee not found");
+            }
+            catch (JPException ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+        public static void SearchUserDetailsPL()
+        {
+            string uID;
+            UserEntities user;
+            try
+            {
+                Console.Clear();
+                Console.WriteLine("************************************************************************************");
+                Console.WriteLine("                                 Search User                           ");
+                Console.WriteLine("************************************************************************************");
+                Console.WriteLine("Enter the User Id :(00001-99999)");
+                uID = Console.ReadLine();
+                user = JPortalBLL.SearchUserBLL(uID);
+                if (user != null)
+                {
+                    Console.WriteLine("User is found");
+                    Console.WriteLine("*********************************************************************************");
+                    Console.WriteLine("{0}-{8}:*{1}*\n{2} {3}\n{4}-{5},{6}\n{7}", user.UserID, user.Password, user.FirstName, user.LastName, user.Age, user.Gender, user.Address, user.PhoneNo, user.UserType);
+                    Console.WriteLine("*********************************************************************************");
+                }
+                else
+                    Console.WriteLine("User not found");
+            }
+            catch (JPException ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+        public static void DisplayAllJobPL()
+        {
+            List<JBEntities> jobs = new List<JBEntities>();
+            try
+            {
+                Console.Clear();
+                Console.WriteLine("************************************************************************************");
+                Console.WriteLine("                                 Display All Jobs                           ");
+                Console.WriteLine("************************************************************************************");
+                jobs = JPortalBLL.ListJobDetailsBLL();
+                Console.WriteLine("------------------------------------------------------------------------------------");
+                foreach (JBEntities job in jobs)
+                {
+                    Console.WriteLine("{0}: {1}, {2}\n\tContact : {3} ({4})\n\tSkillsRequired : {5} \n\tQualification : {6} \n\tAt {7} with Salary {8}\n\tNoOfVacancies : {9}",job.JobID,job.Employer,job.Address,job.ContactNumber,job.ContactEmailID,job.SkillsRequired,job.Qualification,job.Location,job.Salary,job.NoOfVacancies);
+                    Console.WriteLine("------------------------------------------------------------------------------------");
+                }
+                Console.WriteLine("Press any key to continue!");
+                string hold = Console.ReadLine();
+                Console.Clear();
+            }
+            catch (JPException ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+        public static void DisplayAllUserPL()
+        {
+            List<UserEntities> users = new List<UserEntities>();
+            try
+            {
+                Console.Clear();
+                Console.WriteLine("************************************************************************************");
+                Console.WriteLine("                                 Display All Users                           ");
+                Console.WriteLine("************************************************************************************");
+                users = JPortalBLL.ListUserDetailsBLL();
+                Console.WriteLine("------------------------------------------------------------------------------------");
+                foreach (UserEntities user in users)
+                {
+                    Console.WriteLine("{0}-{8}:*{1}*\n{2} {3}\n{4}-{5},{6}\n{7}", user.UserID, user.Password, user.FirstName, user.LastName, user.Age, user.Gender, user.Address, user.PhoneNo, user.UserType);
+                    Console.WriteLine("------------------------------------------------------------------------------------");
+                }
+                Console.WriteLine("Press any key to continue!");
+                string hold = Console.ReadLine();
+                Console.Clear();
+            }
+            catch (JPException ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+        public static void PrintLogin()
+        {          
+            Console.WriteLine("************************************************************************************");
+            Console.WriteLine("                                 Job Portal System : Home                           ");
+            Console.WriteLine("************************************************************************************");
+            Console.WriteLine("1. Existing User");
+            Console.WriteLine("2. New User");
+            Console.WriteLine("3. Exit");
+            Console.WriteLine("************************************************************************************");
+        }
+        public static void PrintForUser()
+        {
+            Console.WriteLine("************************************************************************************");
+            Console.WriteLine("                                 Job Portal System : User Access                    ");
+            Console.WriteLine("************************************************************************************");
+            Console.WriteLine("1. Search Job");
+            Console.WriteLine("2. View Jobs");
+            Console.WriteLine("3. Logout");
+            Console.WriteLine("************************************************************************************");
+        }
+        public static void PrintForAdmin()
+        {
+            Console.WriteLine("************************************************************************************");
+            Console.WriteLine("                                 Job Portal System : Admin Access                    ");
+            Console.WriteLine("************************************************************************************");
+            Console.WriteLine("1. Add Job");
+            Console.WriteLine("2. Edit Job");
+            Console.WriteLine("3. Delete Job");
+            Console.WriteLine("4. Search Job");
+            Console.WriteLine("5. View Jobs");
+            Console.WriteLine("6. Manage Users");
+            Console.WriteLine("7. Logout");
+            Console.WriteLine("************************************************************************************");
+        }
+        public static void PrintForManageUser()
+        {
+            Console.Clear();
+            Console.WriteLine("************************************************************************************");
+            Console.WriteLine("                                 Job Portal System : Manage Users                   ");
+            Console.WriteLine("************************************************************************************");
+            Console.WriteLine("1. Add User");
+            Console.WriteLine("2. Edit User");
+            Console.WriteLine("3. Delete User");
+            Console.WriteLine("4. Search User");
+            Console.WriteLine("5. View Users");
+            Console.WriteLine("6. Exit");
+            Console.WriteLine("************************************************************************************");
+        }
+        static void Serialization()
+        {
+            try
+            {
+                JPortalBLL.SerializeFile();
+            }
+            catch (JPException ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+        static void Deserialization()
+        {
+            try
+            {
+                JPortalBLL.SetListBLL();
+            }
+            catch (JPException ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+    }
+}
